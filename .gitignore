@@ -1,0 +1,8 @@
+*.env
+.env.*
+*.bak
+outputs/
+data/*.sqlite
+data/*.sqlite-*
+php/kacnavi_data/*.sqlite
+__pycache__/

@@ -1,0 +1,1 @@
+<?php $u=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);if(strpos($u,'/kacnavi.php')===0){$_SERVER['PATH_INFO']=substr($u,strlen('/kacnavi.php'));require __DIR__.'/../php/kacnavi.php';return true;} return false;
