@@ -142,12 +142,18 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
        . 'header{background:#fff;border-bottom:1px solid var(--line)}'
        . '.brand{display:flex;align-items:center;gap:11px;padding:14px 0 6px;font-weight:700;font-size:19px;'
        . 'text-decoration:none;color:var(--ink);font-family:system-ui,sans-serif}'
-       . '.brand img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 22%;'
-       . 'background:#eaf0f4;flex:none}'
+       // cover だと丸く切り取られて足が消える。contain で全身を入れる（変形もしない）
+       . '.brand img{width:42px;height:42px;border-radius:11px;object-fit:contain;'
+       . 'background:#eef3f6;padding:3px;flex:none}'
        . '.brand small{display:block;font-weight:400;font-size:12.5px;color:var(--mut);letter-spacing:.04em;margin-top:1px}'
        . '.hero{display:grid;grid-template-columns:1fr 190px;gap:18px;align-items:center;margin:4px 0 6px}'
-       . '.hero img{width:100%;max-width:190px;justify-self:end}'
-       . '@media(max-width:640px){.hero{grid-template-columns:1fr}.hero img{max-width:128px;justify-self:center;margin-top:4px}}'
+       // **マスコットを絶対に変形させない。** width/height 属性を付けたまま CSS で幅だけ
+       // 縮めると、属性の height が残って横につぶれる。265×300 が 190×300（横28%つぶれ）、
+       // 390px では 128×300（半分近くつぶれ）で表示されていた（2026-09-24 実測）。
+       // height:auto を必ず添える。
+       . '.hero img{width:100%;max-width:190px;height:auto;justify-self:end}'
+       . '@media(max-width:640px){.hero{grid-template-columns:1fr}'
+       . '.hero img{max-width:128px;height:auto;justify-self:center;margin-top:4px}}'
        . '.eyebrow{display:inline-block;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:.12em;'
        . 'color:var(--ac-d);background:#eaf0f4;border:1px solid #cfdde5;border-radius:999px;padding:3px 13px;margin-bottom:12px}'
        . '.first{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:12px 0 0}'

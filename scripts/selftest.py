@@ -221,6 +221,24 @@ def t17():
     assert "どこにも送りません" in html
 
 
+@check("画像を縦横に変形させていない（width/height 属性＋CSS幅の事故）")
+def t18():
+    """**マスコットを横につぶしていた。** 265×300 に width/height 属性を付けたまま
+    CSS で幅だけ縮めたので、属性の height=300 が残り 190×300（横28%つぶれ）、
+    390px では 128×300（半分近くつぶれ）になっていた（2026-09-24 実測）。
+    CSS を読んで、幅を指定する img に height:auto が添えてあるかを見る。"""
+    css = get("/")
+    import re
+    for m in re.finditer(r"\.hero img\{([^}]*)\}", css):
+        body = m.group(1)
+        if "width" in body and "height:auto" not in body:
+            raise AssertionError(f"幅を変える img に height:auto が無い: {body}")
+    assert ".hero img{width:100%;max-width:190px;height:auto" in css
+    assert "max-width:128px;height:auto" in css
+    # ヘッダーの印は切り取らない
+    assert "object-fit:contain" in css and "object-fit:cover" not in css
+
+
 def main() -> int:
     ng = 0
     for name, fn in CHECKS:
