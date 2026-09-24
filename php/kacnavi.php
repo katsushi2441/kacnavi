@@ -698,7 +698,13 @@ echo '<details' . ($sel ? ' open' : '') . '><summary style="cursor:pointer;font-
    . '▸ 故人の状況をえらぶ（' . count($valid) . '項目）— 当てはまらない手続きが消えます</summary>';
 echo '<p class="src" style="margin:10px 0 4px">当てはまるものにチェックを入れてください。'
    . 'わからないものは空のままで大丈夫です（そのときは「要るかもしれない手続き」として残ります）。'
-   . '入力はこのブラウザの中だけで処理され、どこにも送りません。</p>';
+   . '入力はこのサーバーの中だけで処理され、どこにも送りません。</p>';
+// **文章で書いてもらう道も残す。** チェックボックス37個を上から読むのは、
+// 葬儀の前後にはつらい。書いたほうが早い人のために、そのまま書ける欄を置く。
+echo '<div style="margin:14px 0 6px"><label for="q" class="src">'
+   . '文章で書いてもかまいません（例: 父が亡くなった。年金受給者。持ち家あり。世帯主だった。国民健康保険。）</label>';
+echo '<input type="text" id="q" name="q" value="' . h($q) . '" '
+   . 'placeholder="亡くなった方のことを、思いつくまま書いてください" style="margin-top:6px"></div>';
 $all = conditions_all($db);
 foreach ($all as $cat => $list) {
     echo '<div class="catname">' . h($cat) . '</div><div class="cond">';
@@ -714,7 +720,9 @@ if ($sel) { echo ' <a class="btn ghost" href="' . h($SELF) . '/">選び直す</a
 echo '</p></details>';
 echo '<script>document.currentScript.parentNode.addEventListener("submit",function(e){'
    . 'e.preventDefault();var v=[];this.querySelectorAll("input[name=\'k[]\']:checked").forEach(function(x){v.push(x.value)});'
-   . 'location.href="' . h($SELF) . '/"+(v.length?"?c="+v.join(","):"")});</script>';
+   . 'var t=this.querySelector("#q").value.trim();var p=[];if(v.length)p.push("c="+v.join(","));'
+   . 'if(t)p.push("q="+encodeURIComponent(t));'
+   . 'location.href="' . h($SELF) . '/"+(p.length?"?"+p.join("&"):"")});</script>';
 echo '</form>';
 
 if ($sel) {
@@ -722,7 +730,12 @@ if ($sel) {
     foreach ($db->query('SELECT id, label FROM conditions') as $c) { $lab[$c['id']] = $c['label']; }
     $names = array();
     foreach ($sel as $s) { if (isset($lab[$s])) { $names[] = $lab[$s]; } }
-    echo '<p class="lead">選んだ状況: ' . h(implode('／', $names)) . '</p>';
+    echo '<p class="lead">' . ($q !== '' ? '書いていただいた文章から読み取った状況' : '選んだ状況')
+       . ': ' . h(implode('／', $names)) . '</p>';
+    if ($q !== '') {
+        echo '<p class="src">違っていたら、下の一覧でチェックを直してください。'
+           . '文章からの読み取りは、書かれている言葉を手がかりにしているだけなので、外すことがあります。</p>';
+    }
     echo '<p class="lead"><strong>' . count($rows) . '件</strong>が当てはまります'
        . '（全' . h($META['n_procedures']) . '件のうち）。期限の早い順に、時期でまとめています。</p>';
 }

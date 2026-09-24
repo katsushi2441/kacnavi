@@ -203,6 +203,24 @@ def t15():
     assert 'class="tscroll"' in get("/pref/愛知県"), "表を包む overflow-x が無い"
 
 
+@check("文章を書いて送ると、そこから状況を読み取る")
+def t16():
+    import urllib.parse as up
+    t = strip(get("/", "q=" + up.quote("母が亡くなりました。要介護3でデイに通っていました。持ち家があり、兄と私の2人です。")))
+    assert "読み取った状況" in t, "文章から読み取った旨が出ていない"
+    assert "介護保険の被保険者証を持っていた" in t
+    assert "家や土地を持っていた" in t
+    assert "介護保険の資格喪失" in t, "介護保険の手続きが出ていない"
+    assert "農地を相続したときの届出" not in t, "書いていない農地の手続きが出ている"
+
+
+@check("文章の欄が画面にある")
+def t17():
+    html = get("/")
+    assert 'name="q"' in html, "自由文の入力欄が無い"
+    assert "どこにも送りません" in html
+
+
 def main() -> int:
     ng = 0
     for name, fn in CHECKS:
