@@ -15,6 +15,12 @@ $SELF   = '/kacnavi.php';
 $SITE   = 'Kurage AfterCare Navi';
 $SUB    = '身内が亡くなったあとの手続きナビ';
 $OGP    = 'https://kurage.exbridge.jp/images/ogp/kacnavi.png';
+// **ヘッダーの印はヒーローと同じクラゲにする。** kurage-face は人型のアバターで、
+// 並べると別人が2人いるように見えた。kurage.exbridge.jp 自身もこのマスコットを使っている。
+$ICON   = 'https://kurage.exbridge.jp/images/kurage-mascot-cutout-300.webp'; // ヘッダーの印
+// 元の PNG は 797×900・567KB。表示は190pxなので、265×300・13KB の webp を使う
+$MASCOT = 'https://kurage.exbridge.jp/images/kurage-mascot-cutout-300.webp'; // 導入のわき
+$XBLOGO = 'https://exbridge.jp/images/logo-mark-64.png';                  // 会社のロゴマーク
 $DBPATH = __DIR__ . '/kacnavi_data/kacnavi.sqlite';
 $BASE   = 'https://kurage.exbridge.jp' . $SELF;
 
@@ -115,12 +121,14 @@ function city_by_slug($db, $pref, $slug) {
 }
 
 function head_html($title, $desc, $canon, $ld_extra = null) {
-    global $SELF, $SITE, $SUB, $OGP, $BASE, $META;
+    global $SELF, $SITE, $SUB, $OGP, $BASE, $META, $ICON;
     echo '<!doctype html><html lang="ja"><head><meta charset="utf-8">';
     echo '<meta name="viewport" content="width=device-width,initial-scale=1">';
     echo '<title>' . h($title) . '</title>';
     echo '<meta name="description" content="' . h($desc) . '">';
     echo '<link rel="canonical" href="' . h($BASE . $canon) . '">';
+    echo '<link rel="icon" type="image/webp" href="' . h($ICON) . '">';
+    echo '<link rel="apple-touch-icon" href="https://kurage.exbridge.jp/images/kurage-mascot-cutout.png">';
     echo '<meta property="og:title" content="' . h($title) . '"><meta property="og:description" content="' . h($desc) . '">';
     echo '<meta property="og:type" content="website"><meta property="og:image" content="' . h($OGP) . '">';
     echo '<meta property="og:site_name" content="' . h($SITE) . '"><meta property="og:url" content="' . h($BASE . $canon) . '">';
@@ -132,8 +140,28 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
        . '*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.85 "Noto Serif JP",Georgia,"Hiragino Mincho ProN",serif}'
        . 'a{color:var(--ac-d)}.wrap{width:min(920px,100% - 32px);margin:0 auto}'
        . 'header{background:#fff;border-bottom:1px solid var(--line)}'
-       . '.brand{display:block;padding:16px 0 4px;font-weight:700;font-size:19px;text-decoration:none;color:var(--ink)}'
-       . '.brand small{display:block;font-weight:400;font-size:13px;color:var(--mut);letter-spacing:.04em}'
+       . '.brand{display:flex;align-items:center;gap:11px;padding:14px 0 6px;font-weight:700;font-size:19px;'
+       . 'text-decoration:none;color:var(--ink);font-family:system-ui,sans-serif}'
+       . '.brand img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 22%;'
+       . 'background:#eaf0f4;flex:none}'
+       . '.brand small{display:block;font-weight:400;font-size:12.5px;color:var(--mut);letter-spacing:.04em;margin-top:1px}'
+       . '.hero{display:grid;grid-template-columns:1fr 190px;gap:18px;align-items:center;margin:4px 0 6px}'
+       . '.hero img{width:100%;max-width:190px;justify-self:end}'
+       . '@media(max-width:640px){.hero{grid-template-columns:1fr}.hero img{max-width:128px;justify-self:center;margin-top:4px}}'
+       . '.eyebrow{display:inline-block;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:.12em;'
+       . 'color:var(--ac-d);background:#eaf0f4;border:1px solid #cfdde5;border-radius:999px;padding:3px 13px;margin-bottom:12px}'
+       . '.first{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:12px 0 0}'
+       . '.first .c{background:#fff;border:1px solid var(--line);border-top:3px solid var(--red);'
+       . 'border-radius:10px;padding:14px 16px}'
+       . '.first .no{font-family:system-ui,sans-serif;font-size:11.5px;letter-spacing:.14em;color:var(--red);font-weight:700}'
+       . '.first h4{margin:4px 0 6px;font-size:16px;line-height:1.5}'
+       . '.first p{margin:0;font-size:14px;color:#4b5663;line-height:1.75}'
+       . '.co{display:flex;align-items:center;gap:12px;margin:0 0 10px}'
+       . '.co img{width:44px;height:44px;border-radius:9px;object-fit:contain;background:#fff;border:1px solid var(--line);flex:none}'
+       . '.co b{font-family:system-ui,sans-serif;font-size:15px;display:block;color:var(--ink)}'
+       . '.co span{font-size:12.5px;color:var(--mut)}'
+       . '.legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:12px 0 0;'
+       . 'font-family:system-ui,sans-serif;font-size:12.5px;color:var(--mut)}'
        . '.menu{display:flex;gap:16px;flex-wrap:wrap;padding-bottom:12px;font-size:14px}'
        . '.menu a{text-decoration:none;color:var(--mut)}'
        . 'main{padding:24px 0 48px}'
@@ -170,9 +198,19 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
        . '.law blockquote{margin:0;font-size:14px;line-height:1.8;color:#3a4450}'
        . 'ul.docs{margin:8px 0 0;padding-left:20px;font-size:14.5px}'
        . '.src{font-size:12.5px;color:var(--mut);line-height:1.85;font-family:system-ui,sans-serif}'
-       . '.tscroll{overflow-x:auto}table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}'
-       . 'table.t th,table.t td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}'
-       . 'table.t th{color:var(--mut);font-size:12px;font-family:system-ui,sans-serif;font-weight:400}'
+       . '.tscroll{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:10px}'
+       . 'table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}'
+       . 'table.t th,table.t td{border-bottom:1px solid #edf1f3;padding:10px 14px;text-align:left;vertical-align:top}'
+       . 'table.t tr:last-child td{border-bottom:0}'
+       . 'table.t th{color:var(--mut);font-size:11.5px;font-family:system-ui,sans-serif;font-weight:400;'
+       . 'letter-spacing:.06em;background:#fafbfb;border-bottom:1px solid var(--line)}'
+       // **手続き名を青リンクの壁にしない。** 48行を全部リンク色にすると、どこを読めばいいか
+       // 分からなくなる（1280pxで実測）。本文の色にして、触れたときだけ色を出す。
+       . 'table.t td a{color:var(--ink);text-decoration:none;border-bottom:1px solid #cfdae1}'
+       . 'table.t td a:hover{color:var(--ac-d);border-bottom-color:var(--ac)}'
+       . 'table.t tr.gh td{background:#eef2f4;border-bottom:1px solid #dde5ea;padding:9px 14px}'
+       . 'table.t tr.gh a{font-family:system-ui,sans-serif;font-weight:700;font-size:13.5px;'
+       . 'color:var(--ac-d);border:0}'
        . 'td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}'
        . '.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 14px;font-size:14.5px}'
        . '.big{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.3}'
@@ -209,7 +247,9 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
        . json_encode(array('@context' => 'https://schema.org', '@graph' => $graph),
                      JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
     echo '</head><body><header><div class="wrap">';
-    echo '<a class="brand" href="' . h($SELF) . '/">' . h($SITE) . '<small>' . h($SUB) . '</small></a>';
+    echo '<a class="brand" href="' . h($SELF) . '/">'
+       . '<img src="' . h($ICON) . '" alt="Kurage" width="38" height="38">'
+       . '<span>' . h($SITE) . '<small>' . h($SUB) . '</small></span></a>';
     echo '<nav class="menu">';
     foreach (array('/' => '状況から調べる', '/when/g0' => '時期の順に見る',
                    '/cities' => '市区町村の窓口', '/about' => 'このサイトについて') as $u => $t) {
@@ -219,15 +259,19 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
 }
 
 function foot_html() {
-    global $META;
+    global $META, $XBLOGO;
     echo '</div></main><footer><div class="wrap">';
     echo '<p class="src">期限の根拠は <a href="https://laws.e-gov.go.jp/" rel="nofollow">e-Gov法令検索</a>（デジタル庁）の条文。'
        . '市区町村の人口・世帯数・年間死亡者数は' . h($META['stats_source']) . '（人口は' . h($META['stats_asof_pop'])
        . '現在、人口動態は' . h($META['stats_asof_doutai']) . '）。いずれも政府標準利用規約に従って出典を示しています。<br>'
        . 'このサイトは手続きの<strong>目安</strong>です。金額・必要書類・受付時間は市区町村ごとに違います。'
        . '相続放棄や相続税など判断が要るものは、弁護士・司法書士・税理士にご相談ください。</p>';
-    echo '<p class="src">提供: <a href="https://exbridge.jp/">株式会社エクスブリッジ</a>（名古屋市）／'
-       . '内容の更新日 ' . h($META['asof']) . '</p>';
+    echo '<div class="co"><img src="' . h($XBLOGO) . '" alt="株式会社エクスブリッジ" width="44" height="44">'
+       . '<span><b>株式会社エクスブリッジ</b>'
+       . '<span>EXBRIDGE, INC.／名古屋市瑞穂区　創業2004年　'
+       . '<a href="https://exbridge.jp/">会社のサイト</a>　'
+       . '<a href="https://kurage.exbridge.jp/">Kurage のほかのシステム</a>　'
+       . '内容の更新日 ' . h($META['asof']) . '</span></span></div>';
     echo '<p class="src">名古屋市内の会社なら、<a href="https://exbridge.jp/ai-it-komon.html?ref=kacnavi">AI-IT顧問契約</a>'
        . '（月15時間・税別150,000円）の期間中に構築できる商品は、商品代金をいただかず当社が設置まで行います。'
        . 'ソースコードごと御社の資産として残ります。</p>';
@@ -600,12 +644,17 @@ if (preg_match('#^/pref/([^/]+)$#', $path, $m)) {
 
 // ---- /cities 索引 ---------------------------------------------------------
 if ($path === '/cities') {
+    global $MASCOT;
     $title = '全国' . n($META['n_cities']) . '市区町村の死亡後の手続き窓口';
     $desc = '都道府県から市区町村を選ぶと、その窓口でする手続きと、その市区町村で1年間に何人が亡くなっているかが出ます。';
     head_html($title . '｜' . $SITE, $desc, '/cities');
+    echo '<div class="hero"><div>';
+    echo '<span class="eyebrow">全国' . n($META['n_cities']) . '市区町村</span>';
     echo '<h1>市区町村の窓口</h1>';
-    echo '<p class="lead">全国' . n($META['n_cities']) . '市区町村（政令指定都市' . h($META['n_seirei'])
-       . '市の区と東京23区を含む）。全国では1年間におよそ' . n($META['death_national']) . '人が亡くなっています。</p>';
+    echo '<p class="lead">政令指定都市' . h($META['n_seirei']) . '市の区と東京23区を含みます。'
+       . '都道府県から選ぶと、その窓口でする手続きと、その市区町村で1年間に何人が亡くなっているかが出ます。'
+       . '全国では1年間におよそ' . n($META['death_national']) . '人が亡くなっています。</p>';
+    echo '</div><img src="' . h($MASCOT) . '" alt="" loading="lazy" width="265" height="300" decoding="async"></div>';
     $by = array();
     foreach ($db->query('SELECT pref, pref_code, COUNT(*) c FROM cities GROUP BY pref ORDER BY pref_code') as $r) {
         $by[] = $r;
@@ -622,9 +671,15 @@ if ($path === '/cities') {
 
 // ---- /about ---------------------------------------------------------------
 if ($path === '/about') {
+    global $MASCOT;
     head_html('このサイトについて｜' . $SITE,
         '期限を法令の条文で裏を取っている理由と、データの出どころ、できないことを書いています。', '/about');
+    echo '<div class="hero"><div>';
+    echo '<span class="eyebrow">Kurage のシステム ／ 株式会社エクスブリッジ</span>';
     echo '<h1>このサイトについて</h1>';
+    echo '<p class="lead">期限を条文で裏を取っている理由と、データの出どころ、できないことを書いています。'
+       . 'PHP 1ファイルと SQLite 1本だけで動くので、ご自分のサーバーにも置けます。</p>';
+    echo '</div><img src="' . h($MASCOT) . '" alt="" loading="lazy" width="265" height="300" decoding="async"></div>';
     echo '<div class="panel"><h3>期限は、条文まで降りて確かめています</h3>';
     echo '<p>「死亡届は7日以内」と書いたページは無数にありますが、どの条文かを出しているものは多くありません。'
        . '期限は改正で動きます。相続登記の3年は2024年4月1日に施行されたもので、それ以前は義務ですらありませんでした。'
@@ -669,23 +724,33 @@ $desc = $sel
 head_html($title, $desc, '/');
 
 if (!$sel) {
+    echo '<div class="hero"><div>';
+    echo '<span class="eyebrow">期限は、法令の条文で裏を取っています</span>';
     echo '<h1>身内が亡くなったあと、何を、いつまでにするか</h1>';
     echo '<p class="lead">手続きは全部で' . h($META['n_procedures']) . '件ありますが、'
        . '<strong>全部が必要な人はいません</strong>。'
        . '故人の状況を選ぶと、当てはまるものだけが残ります。入力した内容はどこにも送りません。</p>';
+    echo '</div><img src="' . h($MASCOT) . '" alt="" loading="lazy" width="265" height="300" decoding="async"></div>';
     // **最初に来た人が、まずこの3つだけ読めばいいようにする。**
     // 48件の一覧をいきなり見せられても、葬儀の前後には読めない。
-    echo '<div class="panel" style="background:#fff;border-left:4px solid var(--red)">';
-    echo '<h3 style="margin-top:0">今日と明日にすること</h3><ol style="margin:0;padding-left:20px">';
-    echo '<li><strong>死亡診断書のコピーを5枚ほど取る。</strong>窓口に原本を出す前に。'
-       . '保険金の請求などで何度も要ります。あとから病院に再発行を頼むと1通数千円かかります。</li>';
-    echo '<li><strong>死亡届を出す。</strong>亡くなったことを<u>知った日</u>から7日以内'
-       . '（戸籍法86条1項）。葬儀社が代行することが多いので、任せているなら確認だけで足ります。</li>';
-    echo '<li><strong>火葬許可証を受け取り、火葬のあと返ってくるものを失くさない。</strong>'
-       . '証印の入ったその紙が、納骨のときに要ります。</li>';
-    echo '</ol><p class="src" style="margin:12px 0 0">残りは、葬儀が終わってからで間に合います。'
-       . '<a href="' . h($SELF) . '/when/g1">14日以内にすること</a>を先に見ておくと、'
-       . '市区町村の窓口へ行く回数が1回で済みます。</p></div>';
+    echo '<h2>今日と明日にすること</h2>';
+    echo '<p class="lead">ここまでは葬儀の前後に済ませます。残りは、葬儀が終わってからで間に合います。</p>';
+    echo '<div class="first">';
+    foreach (array(
+        array('1', '死亡診断書のコピーを5枚とる',
+              '窓口に原本を出す前に。保険金の請求などで何度も要ります。あとから病院に再発行を頼むと、1通あたり数千円かかります。'),
+        array('2', '死亡届を出す',
+              '亡くなったことを<u>知った日</u>から7日以内（戸籍法86条1項）。葬儀社が代わりに出すことが多いので、任せているなら確認だけで足ります。'),
+        array('3', '火葬許可証を受け取る',
+              '火葬のあと、証印の入った紙が返ってきます。<u>それが納骨のときに要る</u>ので失くさないでください。'),
+    ) as $c) {
+        echo '<div class="c"><div class="no">STEP ' . h($c[0]) . '</div>'
+           . '<h4>' . h($c[1]) . '</h4><p>' . $c[2] . '</p></div>';
+    }
+    echo '</div>';
+    echo '<p class="src" style="margin:12px 0 0">続けて'
+       . '<a href="' . h($SELF) . '/when/g1">14日以内にすること</a>を見ておくと、'
+       . '市区町村の窓口へ行く回数が1回で済みます。</p>';
 } else {
     echo '<h1>選んだ状況で必要な手続き</h1>';
 }
@@ -753,9 +818,9 @@ if (!$sel) {
         $in = array();
         foreach ($rows as $r) { if ($r['grp'] === $g['id']) { $in[] = $r; } }
         if (!$in) { continue; }
-        echo '<tr><td colspan="3" style="background:#f2f4f2;font-weight:700;font-size:14px">'
-           . '<a href="' . h($SELF . '/when/' . $g['id']) . '" style="text-decoration:none">' . h($g['name'])
-           . '</a> <span class="src" style="font-weight:400">' . count($in) . '件・' . h($g['descr']) . '</span></td></tr>';
+        echo '<tr class="gh"><td colspan="3">'
+           . '<a href="' . h($SELF . '/when/' . $g['id']) . '">' . h($g['name']) . '</a>'
+           . ' <span class="src">' . count($in) . '件・' . h($g['descr']) . '</span></td></tr>';
         foreach ($in as $r) {
             $badge = $r['dl_n'] && $r['dl_unit']
                 ? (($r['dl_kind'] === '時効' ? '時効' : '') . $r['dl_n'] . $r['dl_unit'] . ($r['dl_kind'] === '時効' ? '' : '以内'))
@@ -766,8 +831,10 @@ if (!$sel) {
         }
     }
     echo '</table></div>';
-    echo '<p class="src">期限の色: <span class="dl lv3">赤</span>=過ぎると選べなくなる・取り返しがつかない／'
-       . '<span class="dl lv2">橙</span>=過ぎるともらえるお金が消える／<span class="dl">灰</span>=いつでもできる。</p>';
+    echo '<div class="legend">'
+       . '<span><span class="dl lv3">7日以内</span>過ぎると選べなくなる</span>'
+       . '<span><span class="dl lv2">2年</span>過ぎるともらえるお金が消える</span>'
+       . '<span><span class="dl">期限なし</span>いつでもできる</span></div>';
 } else {
     foreach ($db->query('SELECT * FROM groups ORDER BY sort') as $g) {
         $in = array();
@@ -785,7 +852,8 @@ if (!$sel) {
 }
 
 if (!$sel) {
-    echo '<h2>最初に知っておくとよいこと</h2>';
+    echo '<h2>よく間違えられているところ</h2>';
+    echo '<p class="lead">どれも条文まで確かめたものです。知らないと、要らない窓口へ行くことになります。</p>';
     echo '<div class="panel"><ul style="margin:0;padding-left:20px">';
     foreach (array(
         '<strong>死亡診断書は、窓口に出す前にコピーを5枚ほど取る。</strong>保険金の請求などで何度も要ります。あとから病院に再発行を頼むと1通あたり数千円かかります。',
