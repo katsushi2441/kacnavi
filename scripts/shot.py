@@ -29,7 +29,7 @@ PAGES = {"top": "/", "result": "/?c=nenkin,fudosan,setainushi,nokoru2,yokin,koku
 
 
 def main() -> int:
-    base = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:18398/kacnavi.php"
+    base = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:18395/kacnavi.php"
     out = Path(sys.argv[2] if len(sys.argv) > 2 else "outputs/shots")
     out.mkdir(parents=True, exist_ok=True)
     bad = 0

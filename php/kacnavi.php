@@ -23,6 +23,8 @@ $MASCOT = 'https://kurage.exbridge.jp/images/kurage-mascot-cutout-300.webp'; // 
 $XBLOGO = 'https://exbridge.jp/images/logo-mark-64.png';                  // 会社のロゴマーク
 $DBPATH = __DIR__ . '/kacnavi_data/kacnavi.sqlite';
 $BASE   = 'https://kurage.exbridge.jp' . $SELF;
+// オンプレミス版（ソースコードごと納品する版）の商品ページ。ref で流入元を分ける
+$STORE  = 'https://kappstore.exbridge.jp/app.php?id=60a6c07508d735ac';
 
 mb_internal_encoding('UTF-8');
 header('Content-Type: text/html; charset=UTF-8');
@@ -162,6 +164,10 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
        . '.first .no{font-family:system-ui,sans-serif;font-size:11.5px;letter-spacing:.14em;color:var(--red);font-weight:700}'
        . '.first h4{margin:4px 0 6px;font-size:16px;line-height:1.5}'
        . '.first p{margin:0;font-size:14px;color:#4b5663;line-height:1.75}'
+       . '.panel.store{border-color:#cddbe4;background:linear-gradient(180deg,#fff 0%,#f7fafb 100%)}'
+       . '.cols2{display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:center}'
+       . '.store-fig img{width:100%;height:auto;border:1px solid var(--line);border-radius:8px}'
+       . '@media(max-width:700px){.cols2{grid-template-columns:1fr}.store-fig{display:none}}'
        . '.co{display:flex;align-items:center;gap:12px;margin:0 0 10px}'
        . '.co img{width:44px;height:44px;border-radius:9px;object-fit:contain;background:#fff;border:1px solid var(--line);flex:none}'
        . '.co b{font-family:system-ui,sans-serif;font-size:15px;display:block;color:var(--ink)}'
@@ -265,7 +271,7 @@ function head_html($title, $desc, $canon, $ld_extra = null) {
 }
 
 function foot_html() {
-    global $META, $XBLOGO;
+    global $META, $XBLOGO, $STORE;
     echo '</div></main><footer><div class="wrap">';
     echo '<p class="src">期限の根拠は <a href="https://laws.e-gov.go.jp/" rel="nofollow">e-Gov法令検索</a>（デジタル庁）の条文。'
        . '市区町村の人口・世帯数・年間死亡者数は' . h($META['stats_source']) . '（人口は' . h($META['stats_asof_pop'])
@@ -278,6 +284,9 @@ function foot_html() {
        . '<a href="https://exbridge.jp/">会社のサイト</a>　'
        . '<a href="https://kurage.exbridge.jp/">Kurage のほかのシステム</a>　'
        . '内容の更新日 ' . h($META['asof']) . '</span></span></div>';
+    echo '<p class="src">このシステムは<a href="' . h($STORE) . '&amp;ref=kacnavi-foot">オンプレミス版</a>があります。'
+       . 'PHP1ファイルとSQLite1本を自分のサーバーに置き、自分の地域の葬祭費や窓口の課名を足して使えます。'
+       . 'ソースコード（MIT）と手続きデータ同梱。</p>';
     echo '<p class="src">名古屋市内の会社なら、<a href="https://exbridge.jp/ai-it-komon.html?ref=kacnavi">AI-IT顧問契約</a>'
        . '（月15時間・税別150,000円）の期間中に構築できる商品は、商品代金をいただかず当社が設置まで行います。'
        . 'ソースコードごと御社の資産として残ります。</p>';
@@ -355,6 +364,30 @@ function item_html($p, $full = false, $city = null) {
            . (mb_strlen($why) > 72 ? '…' : '') . '</div>';
     }
     echo '</div>';
+}
+
+/**
+ * オンプレミス版の案内。**人が着地するページの本文に置く。**
+ * フッターの1行だけでは読まれない（kappstore は28日18クリックで、流入のある
+ * 下層ページから導線が1本も無かった。2026-09-24 実測）。
+ */
+function store_html($ref, $lead = '') {
+    global $STORE;
+    echo '<div class="panel store"><div class="cols2">';
+    echo '<div><div class="src" style="margin-bottom:4px">自分のサーバーに置く</div>';
+    echo '<h3 style="margin:0 0 8px">このシステムのオンプレミス版</h3>';
+    echo '<p style="margin:0;font-size:14.5px">'
+       . ($lead ? h($lead) . '<br>' : '')
+       . 'PHP1ファイルとSQLite1本だけです。データベースサーバーも常駐プロセスも要りません。'
+       . '自分の地域の<strong>葬祭費の金額や窓口の課名</strong>を足して使えます。'
+       . '手続きのデータは1つのファイルなので、事務所の方が自分で直せます。</p>';
+    echo '<p class="src" style="margin:10px 0 0">ソースコード（MIT）・手続きデータ・'
+       . '条文を取り直すPython・自己テスト同梱。改変も再配布も自由です。</p>';
+    echo '<p style="margin:14px 0 0"><a class="btn" href="' . h($STORE . '&amp;ref=' . $ref) . '">'
+       . 'オンプレミス版を見る</a></p>';
+    echo '</div><div class="store-fig"><img src="https://kurage.exbridge.jp/images/ogp/kacnavi.png" '
+       . 'alt="" loading="lazy" width="1200" height="630"></div>';
+    echo '</div></div>';
 }
 
 /** 手続きを表で出す。件数が多いところはカードでなく表にする（スマホで読める長さにするため）。 */
@@ -489,6 +522,7 @@ if (preg_match('#^/p/([^/]+)$#', $path, $m)) {
         echo '<p class="lead">同じ窓口で済むものをまとめて出します。何度も足を運ばずに済みます。</p>';
         foreach ($same as $s) { item_html($s); }
     }
+    store_html('kacnavi-proc');
     foot_html();
     exit;
 }
@@ -500,7 +534,7 @@ if (preg_match('#^/when/([a-z0-9]+)$#', $path, $m)) {
     if (!$g) { http_response_code(404); head_html('見つかりません｜' . $SITE, '', '/'); echo '<h1>見つかりません</h1>'; foot_html(); exit; }
     $st = $db->prepare('SELECT * FROM procedures WHERE grp = ? ORDER BY sort'); $st->execute(array($g['id']));
     $rows = $st->fetchAll();
-    $title = '死亡後の手続き・' . $g['name'] . 'にすること' . count($rows) . '件｜期限と窓口の一覧';
+    $title = '死亡後の手続き・' . $g['name'] . 'にすること' . count($rows) . '件｜期限と窓口の一覧表';
     $desc = $g['name'] . 'にする手続きを' . count($rows) . '件、期限・窓口・持ち物つきで並べています。' . $g['descr'] . '。';
     $ld = array(array('@type' => 'ItemList', 'name' => $title, 'numberOfItems' => count($rows),
         'itemListElement' => array()), array('@type' => 'BreadcrumbList', 'itemListElement' => array(
@@ -524,6 +558,7 @@ if (preg_match('#^/when/([a-z0-9]+)$#', $path, $m)) {
     echo '</div>';
     echo '<div class="panel quiet"><p>該当するものだけを見たいときは、'
        . '<a href="' . h($SELF) . '/">故人の状況から調べる</a>と、要らない手続きが消えます。</p></div>';
+    store_html('kacnavi-when');
     foot_html();
     exit;
 }
@@ -536,7 +571,7 @@ if (preg_match('#^/city/([^/]+)/([^/]+)$#', $path, $m)) {
     $st = $db->prepare("SELECT * FROM procedures WHERE where_kind = 'city' ORDER BY sort");
     $st->execute();
     $rows = $st->fetchAll();
-    $title = $full . 'で身内が亡くなったときの手続き一覧｜死亡届・葬祭費・期限と窓口';
+    $title = $full . 'で身内が亡くなったときの手続き一覧表｜死亡届・葬祭費・期限と窓口';
     $desc = $full . 'で身内が亡くなったあとに市区町村の窓口でする手続き' . count($rows) . '件を、期限・持ち物つきで並べています。'
           . ($c['death'] ? $full . 'では1年間に' . n($c['death']) . '人が亡くなっています。' : '');
     $ld = array(
@@ -596,6 +631,9 @@ if (preg_match('#^/city/([^/]+)/([^/]+)$#', $path, $m)) {
     table_html($st->fetchAll(), true);
     echo '<p><a class="btn ghost" href="' . h($SELF) . '/">故人の状況から、必要なものだけを出す</a></p>';
 
+    store_html('kacnavi-city', $c['pref'] . $c['city'] . 'の葬祭費の金額や窓口の課名を足して、'
+                               . '役所・議員事務所・士業の事務所でそのまま使えます。');
+
     // 同じ都道府県の近くの市区町村
     $st = $db->prepare('SELECT slug, city, death FROM cities WHERE pref = ? AND code <> ? ORDER BY death DESC LIMIT 12');
     $st->execute(array($c['pref'], $c['code']));
@@ -621,7 +659,7 @@ if (preg_match('#^/pref/([^/]+)$#', $path, $m)) {
     $rows = $st->fetchAll();
     if (!$rows) { http_response_code(404); head_html('見つかりません｜' . $SITE, '', '/cities'); echo '<h1>見つかりません</h1>'; foot_html(); exit; }
     $sum = 0; foreach ($rows as $r) { if (!$r['seirei_ku']) { $sum += (int)$r['death']; } }
-    $title = $pref . 'の市区町村別・死亡後の手続き窓口一覧（' . count($rows) . '件）';
+    $title = $pref . 'の市区町村別・死亡後の手続き窓口一覧表（' . count($rows) . '件）';
     $desc = $pref . 'の' . count($rows) . '市区町村ごとに、身内が亡くなったあとの手続きと窓口をまとめています。'
           . $pref . '全体では1年間におよそ' . n($sum) . '人が亡くなっています。';
     head_html($title, $desc, '/pref/' . rawurlencode($pref), array(
@@ -644,6 +682,7 @@ if (preg_match('#^/pref/([^/]+)$#', $path, $m)) {
     echo '</table></div>';
     echo '<p class="src">政令指定都市は区ごとに窓口が分かれるため、市の行と区の行の両方を載せています。'
        . '都道府県の合計には区の数を重ねて数えないようにしています。</p>';
+    store_html('kacnavi-pref');
     foot_html();
     exit;
 }
@@ -708,12 +747,12 @@ if ($path === '/about') {
        . '行く前に、その市区町村の公式ページか電話で確かめてください。</p>';
     echo '<p>相続放棄をすべきかどうか、相続税がかかるかどうかといった判断はしません。'
        . '弁護士・司法書士・税理士にご相談ください。</p></div>';
-    echo '<div class="panel"><h3>自分のところに置けます</h3>';
-    echo '<p>PHP1ファイルとSQLite1本だけで動きます。市区町村の役所・議員事務所・士業の事務所が'
-       . '自分のサーバーに置いて、自分の地域の金額や窓口を足して使えます。'
-       . '<strong>入力された故人の情報は、どこにも送りません。</strong></p>';
-    echo '<p><a href="https://exbridge.jp/ai-it-komon.html?ref=kacnavi-about">AI-IT顧問契約</a>や'
-       . '<a href="https://exbridge.jp/">株式会社エクスブリッジ</a>へお問い合わせください。</p></div>';
+    store_html('kacnavi-about', '市区町村の役所・議員事務所・士業の事務所が、自分のサーバーに置いて使う作りです。'
+                                . '入力された故人の情報は、どこにも送りません。');
+    echo '<div class="panel quiet"><h3 style="margin-top:0">当社に作らせることもできます</h3>';
+    echo '<p>名古屋市内の会社なら、<a href="https://exbridge.jp/ai-it-komon.html?ref=kacnavi-about">AI-IT顧問契約</a>'
+       . '（月15時間・税別150,000円）の期間中に構築できる商品は、商品代金をいただかず当社が設置まで行います。'
+       . 'ご相談は<a href="https://exbridge.jp/">株式会社エクスブリッジ</a>へ。</p></div>';
     foot_html();
     exit;
 }
@@ -721,7 +760,10 @@ if ($path === '/about') {
 // ---- / トップ（状況から調べる／結果） --------------------------------------
 $title = $sel
     ? '選んだ状況で必要な死亡後の手続き｜期限と窓口の一覧'
-    : '親が亡くなったらすること｜死亡後の手続き一覧と期限・順番（全' . h($META['n_procedures']) . '件）';
+    // 「一覧」より「一覧表」のほうが検索されている（死亡後の手続き一覧表1,600／
+    // 親が亡くなった時の手続き一覧表2,400。2026-09-24 実測）。実際このページは表なので、
+    // 言い換えではなく、出しているものをそのまま名乗る。
+    : '親が亡くなったらすること｜死亡後の手続き一覧表と期限・順番（全' . h($META['n_procedures']) . '件）';
 $desc = $sel
     ? '選んだ状況に当てはまる手続きだけを、期限の近い順に出しています。'
     : '身内が亡くなったあとの手続き' . h($META['n_procedures']) . '件を、期限の近い順に並べています。'
@@ -816,7 +858,7 @@ if ($sel) {
 // 「親が亡くなった時の手続き一覧表」と検索する人が欲しいのは、まさにこの表。
 // 条件を選んだあとは件数が減るので、説明のついたカードで出す。
 if (!$sel) {
-    echo '<h2>死亡後の手続き一覧（全' . count($rows) . '件）</h2>';
+    echo '<h2>死亡後の手続き一覧表（全' . count($rows) . '件）</h2>';
     echo '<p class="lead">期限の早い順。手続き名を押すと、根拠の条文・持ち物・窓口が出ます。</p>';
     echo '<div class="tscroll"><table class="t">';
     echo '<tr><th style="width:38%">手続き</th><th style="width:26%">期限</th><th>窓口</th></tr>';
@@ -841,6 +883,7 @@ if (!$sel) {
        . '<span><span class="dl lv3">7日以内</span>過ぎると選べなくなる</span>'
        . '<span><span class="dl lv2">2年</span>過ぎるともらえるお金が消える</span>'
        . '<span><span class="dl">期限なし</span>いつでもできる</span></div>';
+    store_html('kacnavi-top');
 } else {
     foreach ($db->query('SELECT * FROM groups ORDER BY sort') as $g) {
         $in = array();

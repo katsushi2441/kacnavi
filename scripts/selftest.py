@@ -239,6 +239,34 @@ def t18():
     assert "object-fit:contain" in css and "object-fit:cover" not in css
 
 
+@check("人が着地するページすべてに、オンプレミス版への導線がある")
+def t19():
+    """**フッターの1行だけでは読まれない。** kappstore は28日18クリックで、
+    流入のある下層ページから導線が1本も無かった（2026-09-24 実測）。
+    検索で人が着地するページ（市区町村・手続き詳細・時期別・トップ）の
+    本文に案内を置く。"""
+    # **get() の中で1回だけエンコードする。** ここで quote すると二重になって404になる
+    pages = {"トップ": "/", "市区町村": "/city/愛知県/名古屋市中区",
+             "手続き詳細": "/p/souzoku-toki", "時期別": "/when/g1",
+             "都道府県": "/pref/愛知県", "このサイトについて": "/about"}
+    for name, path in pages.items():
+        html = get(path)
+        assert "app.php?id=60a6c07508d735ac" in html, f"{name} に商品ページへのリンクが無い"
+        assert 'class="panel store"' in html or path == "/cities", f"{name} に本文の案内カードが無い"
+        assert "ref=kacnavi-" in html, f"{name} のリンクに ref が無い（流入元が分からない）"
+
+
+@check("題名が、実際に出しているもの（表）を名乗っている")
+def t20():
+    """「一覧」より「一覧表」のほうが検索されている（死亡後の手続き一覧表1,600／
+    親が亡くなった時の手続き一覧表2,400）。このページは実際に表なので言い換えではない。"""
+    import re
+    t = re.search(r"<title>([^<]*)", get("/")).group(1)
+    assert "一覧表" in t, f"題名に「一覧表」が無い: {t}"
+    assert "親が亡くなったらすること" in t
+    assert "<table" in get("/"), "一覧表と名乗っているのに表が無い"
+
+
 def main() -> int:
     ng = 0
     for name, fn in CHECKS:
